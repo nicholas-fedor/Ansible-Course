@@ -221,6 +221,8 @@ Created a README.md and added it to the repo.
 git push origin
 ```
 
+Note: Setting up Visual Studio Code is optional, but will enable greater functionality when working across multiple files. I have kept the notes in-line with the course for the time being.
+
 ## Section 2: Running Commands and Tasks
 
 ### Part 5. Running Elevated Commands
