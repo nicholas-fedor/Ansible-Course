@@ -330,7 +330,7 @@ The output will show the additional task `update repository index` and indicate 
 
 - Add an additional play (task) to the playbook:
 
-```
+```console
 nano install_apache.yml
 ```
 
