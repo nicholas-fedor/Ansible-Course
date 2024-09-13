@@ -1159,6 +1159,159 @@ git commit -am "Update inventory and add plays to site.yml playbook" && git push
 
 ### Part 13. Adding System Users
 
+- Open the `site.yml` playbook:
+
+```console
+nano site.yml
+```
+
+- Create a `Create user` play just after the `Install updates for Ubuntu`:
+
+```site.yml
+...
+    - name: Create user
+      tags: always
+      ansible.builtin.user:
+        name: simone
+        groups: root
+...
+```
+
+- Run the `site.yml` playbook:
+
+```console
+ansible-playbook --ask-become-pass site.yml
+```
+
+- Verify the user was created on the Fedora and Ubuntu servers:
+
+```console
+cat /etc/passwd | grep simone
+```
+
+#### Update Ubuntu server to allow Simone to run root commands without a password
+
+- Login to root account:
+
+```console
+sudo -s
+```
+
+- Create a sudoers file for Simone:
+
+```simone
+nano /etc/sudoers.d/simone
+```
+
+- Add the following:
+
+```simone
+simone ALL=(ALL) NOPASSWD: ALL
+```
+
+- Update the file permissions:
+
+```console
+chmod 440 /etc/sudoers.d/simone
+```
+
+- Repeat on the Fedora server as root:
+
+```console
+echo "simone ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/simone && chmod 440 /etc/sudoers.d/simone
+```
+
+- Copy `ansible.pub` SSH Key from Ubuntu workstation:
+
+```console
+cat ~/.ssh/ansible.pub
+```
+
+- Login into servers as Simone:
+
+```console
+sudo -su simone
+```
+
+- Create a `~/.ssh` directory with appropriate security settings:
+
+```console
+mkdir ~/.ssh && chmod 700 ~/.ssh
+```
+
+- Add the SSH key to an `authorized_keys` file:
+
+```console
+echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFsT4j5I7WtfiqNa9hWZ3qOF91CmFf4OdT4bTaV3q7pI nick@udemy-ansible-ubuntu-00" > ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
+```
+
+- Update `ansible.cfg` with `remote_user = simone`:
+
+```console
+echo "remote_user = simone" >> ansible.cfg
+```
+
+- Run the `site.yml` playbook to test the addition of the user configuration:
+
+```console
+ansible-playbook site.yaml
+```
+
+Note: The `--ask-become-pass` flag should not be needed anymore with the Sudoers configuration added for the `simone` user.
+
+This should run normally without any issues.
+
+- Open the `site.yml` playbook:
+
+```console
+nano site.yml
+```
+
+- Add `Add Sudoers file for Simone` play to `site.yml`:
+
+```site.yml
+...
+    - name: Add Sudoers file for Simone
+      tags: always
+      ansible.builtin.copy:
+        src: sudoer_simone
+        dest: /etc/sudoers.d/simone
+        owner: root
+        group: root
+        mode: "0440"
+...
+```
+
+- Add `Add SSH key for Simone` play to `site.yml`:
+
+```site.yml
+...
+    - name: Add SSH key for Simone
+      tags: always
+      ansible.posix.authorized_key:
+        user: simone
+        key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFsT4j5I7WtfiqNa9hWZ3qOF91CmFf4OdT4bTaV3q7pI nick@udemy-ansible-ubuntu-00"
+...
+```
+
+- Create `simone` Sudoers file for Ansible to copy:
+
+```console
+echo "simone ALL=(ALL) NOPASSWD: ALL" > ~/Documents/Ansible/files/sudoer_simone
+```
+
+- Apply the configuration using the `site.yml` playbook:
+
+```console
+ansible-playbook site.yaml
+```
+
+- Update the Git repository:
+
+```console
+git commit -am "Added plays for creating bootstrap user" && git push origin
+```
+
 ## Section 5: Managing Multiple Servers with Ansible
 
 ### Part 14. Implementing Server Roles
