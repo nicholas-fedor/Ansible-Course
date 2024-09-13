@@ -419,12 +419,28 @@ systemctl status apache2
 * Update the Git and GitHub repository:
 
 ```console
-git add . \
-git commit -m "Add Apache2 installation and removal playbooks" \
+git add . && \
+git commit -m "Add Apache2 installation and removal playbooks" && \
 git push origin
 ```
 
 ### Part 7. Dealing with Mixed Linux Environments
+
+Using a Fedora server VM (IP: 192.168.99.201) to simulate using a mixed Linux environment.
+
+* Copy the workstation's SSH key to the Fedora server:
+
+```console
+ssh-copy-id -i ~/.ssh/ansible.pub nick@192.168.99.201
+```
+
+* Test SSH connectivity to the Fedora server:
+
+```console
+ssh nick@192.168.99.201
+```
+
+
 
 ## Section 3: Organizing our Repository
 
