@@ -791,7 +791,7 @@ Note: It is possible to have each host be a member of multiple groups, i.e. the 
 
 - Create a new `site.yml` playbook:
 
-```
+```site.yml
 nano site.yml
 ```
 
@@ -856,6 +856,102 @@ git commit -am "Add site.yml playbook and updated inventory file to include grou
 ```
 
 ### Part 10. Adding Tags
+
+Using tags is a way to run a play without having to run all plays in a playbook.
+
+- Open `site.yml`:
+
+```console
+nano site.yml
+```
+
+- Add `tags: always` tags to `Install updates` plays for both Fedora and Ubuntu.
+- Add `tags: apache, ubuntu` tag to `Install apache` play.
+- Add `tags: db, fedora` tag to `Install site database` play.
+
+Example:
+
+```site.yml
+---
+- name: Install updates
+  hosts: all
+  become: true
+  pre_tasks:
+
+    - name: Install updates for Fedora
+      tags: always
+      ansible.builtin.dnf:
+        update_only: true
+        update_cache: true
+      when: ansible_distribution == "Fedora"
+
+    - name: Install updates for Ubuntu
+      tags: always
+      ansible.builtin.apt:
+        upgrade: dist
+        update_cache: true
+      when: ansible_distribution == "Ubuntu"
+
+- name: Install site web server
+  hosts: web_servers
+  become: true
+  tasks:
+
+    - name: Install apache
+      tags: apache, ubuntu
+      ansible.builtin.apt:
+        name:
+          - apache2
+          - libapache2-mod-php
+      when: ansible_distribution == "Ubuntu"
+
+- name: Install site database
+  tags: db, fedora
+  hosts: db_servers
+  become: true
+  tasks:
+
+    - name: Install mariadb
+      ansible.builtin.dnf:
+        name: mariadb
+      when: ansible_distribution == "Fedora"
+```
+
+- Remove MariaDB from the Fedora server:
+
+```console
+sudo yum remove mariadb -y
+```
+
+- Run `site.yml` using the `--tags db` tag:
+
+```console
+ansible-playbook --tags db --ask-become-pass site.yml
+```
+
+This is expected to install MariaDB on the Fedora server specifically due to the use of the `db` tag.
+
+- Repeat, but using the `fedora` tag instead:
+
+```console
+ansible-playbook --tags fedora --ask-become-pass site.yml
+```
+
+This is expected to run the plays tagged with `fedora`.
+
+- Repeat, but using the `apache` tag instead:
+
+```console
+ansible-playbook --tags apache --ask-become-pass site.yml
+```
+
+This is expected to run the plays tagged with `apache`.
+
+- Update Git repository:
+
+```console
+git commit -am "Add tags to site.yml" && git push origin
+```
 
 ## Section 4: System Administration with Ansible
 
