@@ -997,6 +997,49 @@ nano /files/default_site.html
 git commit -am "Add default_site.html" && git push origin
 ```
 
+- Open `site.yml`
+
+```console
+nano site.yml
+```
+
+- Add a play to copy html file to web server:
+
+```site.yml
+...
+    - name: Add default_site.html to web server
+      tags: apache, ubuntu
+      ansible.builtin.copy:
+        src: default_site.html
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: 0644
+...
+```
+
+- Run the `site.yml` playbook:
+
+```console
+ansible-playbook --ask-become-pass site.yml
+```
+
+- Check the Ubuntu server to see if the change was successful:
+
+```console
+cat /var/www/html/index.html
+```
+
+- Visit the webpage using a web browser:
+
+<http://192.168.99.245>
+
+- Update the Git repository:
+
+```console
+git commit -am "Add copy html file to web server to site.yml playbook" && git push origin
+```
+
 ### Part 12. Managing Services
 
 ### Part 13. Adding System Users

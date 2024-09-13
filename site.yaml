@@ -3,7 +3,6 @@
   hosts: all
   become: true
   pre_tasks:
-
     - name: Install updates for Fedora
       tags: always
       ansible.builtin.dnf:
@@ -22,7 +21,6 @@
   hosts: web_servers
   become: true
   tasks:
-
     - name: Install apache
       tags: apache, ubuntu
       ansible.builtin.apt:
@@ -31,12 +29,20 @@
           - libapache2-mod-php
       when: ansible_distribution == "Ubuntu"
 
+    - name: Copy html file to web server
+      tags: apache, ubuntu
+      ansible.builtin.copy:
+        src: default_site.html
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: "0644"
+
 - name: Install site database
   tags: db, fedora
   hosts: db_servers
   become: true
   tasks:
-
     - name: Install mariadb
       ansible.builtin.dnf:
         name: mariadb
