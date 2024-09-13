@@ -754,7 +754,90 @@ The expectation is that the playbook should run with no errors.
 git commit -am "Refactor install_apache.yml playbook and update inventory" && git push origin
 ```
 
-### Part 9. Creating and Inventory for Ansible
+### Part 9. Creating an Inventory for Ansible
+
+Learning about inventory groups.
+
+* Open the `inventory` file:
+
+```console
+nano inventory
+```
+
+* Remove the variables and add groups `web_servers` and `db_servers`, for example:
+
+```inventory
+[web_servers]
+# Ubuntu Server VM Udemy-Ansible-Ubuntu-01
+192.168.99.245                                                      
+
+[db_servers]
+# Fedora Server VM Udemy-Ansible-Fedora-02
+192.168.99.201
+```
+Note: It is possible to have each host be a member of multiple groups, i.e. the Fedora server in both the `web_servers` and `db_servers` groups.
+
+* Create a new `site.yml` playbook:
+
+```
+nano site.yml
+```
+
+Note the `hosts:` section is used to specify the groups.
+Use the `pre_tasks` section to ensure these plays are run first.
+This playbook can be refactored; however, it will be kept relatively simple for purposes of the course.
+
+Example:
+
+```site.yml
+---
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: install updates for Fedora
+    ansible.builtin.dnf:
+      update_only: yes
+      update_cache: yes
+    when: ansible_distribution == "Fedora"
+
+  - name: install updates for Ubuntu
+    ansible.builtin.apt:
+      upgrade: dist
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+- hosts: web_servers
+  become: true
+  tasks:
+
+  - name: install apache on web servers
+    ansible.builtin.apt:
+      name: 
+        - apache2
+        - libapache2-mod-php
+    when: ansible_distribution == "Ubuntu"
+
+- hosts: db_servers
+  become: true
+  tasks:
+
+  - name: install mariadb package on db servers
+    ansible.builtin.dnf:
+      name: mariadb
+      state: latest
+    when: ansible_distribution == "Fedora"
+```
+
+* Run the `site.yml` playbook:
+
+```console
+ansible-playbook --ask-become-pass site.yml
+```
+
+This playbook is expected to run without issues and install MariaDB on the Fedora server.
+
+
 
 ### Part 10. Adding Tags
 

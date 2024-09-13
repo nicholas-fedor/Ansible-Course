@@ -1,4 +1,7 @@
+[web_servers]
 # Ubuntu Server VM Udemy-Ansible-Ubuntu-01
-192.168.99.245 apache_package=apache2 php_package=libapache2-mod-php
+192.168.99.245
+
+[db_servers]
 # Fedora Server VM Udemy-Ansible-Fedora-02
-192.168.99.201 apache_package=httpd php_package=php
+192.168.99.201
