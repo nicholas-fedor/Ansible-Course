@@ -1014,7 +1014,7 @@ nano site.yml
         dest: /var/www/html/index.html
         owner: root
         group: root
-        mode: 0644
+        mode: "0644"
 ...
 ```
 
@@ -1041,6 +1041,121 @@ git commit -am "Add copy html file to web server to site.yml playbook" && git pu
 ```
 
 ### Part 12. Managing Services
+
+- Open the `site.yml` file:
+
+```console
+nano site.yml
+```
+
+- Add a play to install Apache on Fedora:
+
+```site.yml
+    - name: Install Apache on Fedora
+      tags: apache, fedora
+      ansible.builtin.dnf:
+        name:
+          - httpd
+      when: ansible_distribution == "Fedora"
+```
+
+- Add plays using the `ansible.builtin.service` module:
+
+```site.yml
+    - name: Ensure Apache is running on Ubuntu
+      tags: apache, ubuntu
+      ansible.builtin.service:
+        name: apache2
+        state: started
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Ensure Apache is running on Fedora
+      tags: apache, fedora
+      ansible.builtin.service:
+        name: httpd
+        state: started
+      when: ansible_distribution == "Fedora"
+```
+
+- Run the `site.yml` playbook:
+
+```console
+ansible-playbook --ask-become-pass site.yml
+```
+
+- Open the `inventory` file:
+
+```console
+nano inventory
+```
+
+- Duplicate the Fedora server into the `web_servers` group:
+
+```inventory
+[web_servers]
+# Ubuntu Server VM Udemy-Ansible-Ubuntu-01
+192.168.99.245
+# Fedora Server VM Udemy-Ansible-Fedora-02
+192.168.99.201
+
+[db_servers]
+# Fedora Server VM Udemy-Ansible-Fedora-02
+192.168.99.201
+```
+
+- Check the status of the `httpd` service on Fedora:
+
+```console
+systemctl status httpd
+```
+
+- Reopen the `site.yml` file:
+
+```console
+nano site.yml
+```
+
+- Add play to change email address in Fedora server's `/etc/httpd/conf/httpd.conf` file:
+
+```site.yml
+...
+    - name: Change admin email address
+      tags: apache, fedora
+      ansible.builtin.lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        regexp: "^ServerAdmin" # Look for line that starts with ServerAdmin
+        line: ServerAdmin somebody@somewhere.net
+      when: ansible_distribution == "Fedora"
+      register: httpd
+...
+```
+
+Note: `register` allows storage of state to be registered.
+
+- Add play to restart Apache:
+
+```site.yml
+...
+    - name: Restart httpd on Fedora
+      tags: apache, fedora
+      ansible.builtin.service:
+        name: httpd
+        state: restarted
+      when: httpd.changed
+...
+```
+
+- Run the `site.yml` playbook:
+
+```console
+ansible-playbook --ask-become-pass site.yml
+```
+
+- Update the Git repository:
+
+```console
+git commit -am "Update inventory and add plays to site.yml playbook" && git push origin
+```
 
 ### Part 13. Adding System Users
 
