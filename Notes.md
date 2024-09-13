@@ -255,6 +255,175 @@ ansible all -m apt -a upgrade=dist --become --ask-become-pass
 
 ### Part 6. Writing Our First Playbook
 
+Getting into using Ansible as intended.
+
+* Create a playbook to install Apache server:
+
+```console
+nano install_apache.yml
+```
+
+Content:
+
+```install_apache.yml
+---
+- hosts: all
+  become: true
+  tasks: 
+
+  - name: install apache2 package
+    ansible.builtin.apt: 
+      name: apache2
+```
+
+All hosts are referenced as only one host is currently configured via the inventory.
+Command elevation is enabled via `become: true`.
+The task name has no impact on execution; however, it's a good idea to use a descriptive name for logging purposes.
+The module is the `apt` built-in Ansible module.
+The package to install is `apache2`.
+
+* To run the playbook:
+
+```console
+ansible-playbook --ask-become-pass install_apache.yml
+```
+
+The output from running playbooks is different from the earlier commands in that it omits the verbose output and simply outputs the status of the playbook's tasks.
+
+* To confirm the status of Apache2 on the server:
+
+Using a shell on the server: 
+```console
+systemctl status apache2
+```
+
+If Apache2 is running, then a default starter webpage can also be accessed by navigating to the server via a web browser.
+<http://192.168.99.245>
+
+* Add another task to the `install_apache.yml` playbook:
+
+```console
+nano install_apache.yml
+```
+
+Add additional task before `install apache2 package`.
+This is equivalent to `apt update` prior to installing packages.
+
+```install_apache.yml
+  - name: update repository index
+    ansible.builtin.apt:
+      update_cache: yes
+```
+
+* Run the playbook again:
+
+```console
+ansible-playbook --ask-become-pass install_apache.yml
+```
+The output will show the additional task `update repository index` and indicate `changed`.
+
+* Add an additional play (task) to the playbook:
+
+```
+nano install_apache.yml
+```
+
+Add after install apache2 package
+
+```install_apache.yml
+  - name: install support for php
+    ansible.builtin.apt:
+      name: libapache2-mod-php
+```
+
+* Run the playbook again:
+
+```console
+ansible-playbook --ask-become-pass install_apache.yml
+```
+The output will show the results of the plays and the play recap.
+
+* Adding an option to a play to ensure the latest package is installed:
+
+```console
+nano ansible_playbook.yml
+```
+
+Add the following after `name:apche2`
+Ensure it's indented on the same level as the prior `name` key.
+
+```ansible_playbook.yml
+      state: latest
+```
+
+Do the same for the `install support for php` play.
+
+* Again, run the playbook to test:
+
+```console
+ansible-playbook --ask-become-pass install_apache.yml
+```
+
+It's likely only `update repository index` will reflect a `changed` status.
+
+* To reverse the process and remove installed packages:
+
+Make a copy of the install playbook:
+
+```console
+cp install_apache.yml remove_apache.yml
+```
+* Update `remove_apache.yml`:
+
+```console
+nano remove_apache.yml
+```
+
+* Change the names of the plays and the `state` to `absent` for each package:
+
+```remove_apache.yml
+---
+- hosts: all
+  become: true
+  tasks:
+
+  - name: update repository index
+    ansible.builtin.apt:
+      update_cache: yes
+
+  - name: remove apache2 package
+    ansible.builtin.apt:
+      name: apache2
+      state: absent
+
+  - name: remove support for php
+    ansible.builtin.apt:
+      name: libapache2-mod-php
+      state: absent
+```
+
+* Run the `remove_apache.yml` playbook:
+
+```console
+ansible-playbook --ask-become-pass remove_apache.yaml
+```
+
+The output should show each play is run and an indication of four (4) ok's and three (3) changes.
+
+* Check the server again to confirm Apache2 is no longer installed:
+
+```console
+systemctl status apache2
+```
+
+* Update the Git and GitHub repository:
+
+```console
+git add . \
+git commit -m "Add Apache2 installation and removal playbooks" \
+git push origin
+```
+
 ### Part 7. Dealing with Mixed Linux Environments
 
 ## Section 3: Organizing our Repository
