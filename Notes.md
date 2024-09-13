@@ -440,7 +440,161 @@ ssh-copy-id -i ~/.ssh/ansible.pub nick@192.168.99.201
 ssh nick@192.168.99.201
 ```
 
+* Add the Fedora server to the Ansible inventory file:
 
+```console
+echo 192.168.99.201 >> inventory
+```
+
+* Check Git status:
+
+```console
+git status
+```
+
+* Show changes to the `inventory` file:
+
+```console
+git diff inventory
+````
+
+* Commit the changes to the `inventory` file:
+
+```console
+git commit -am "Added Fedora server"
+```
+Note: Using the `-a` flag adds files that are already being watched by Git.
+
+* Push the changes to GitHub:
+
+```console
+git push origin
+```
+
+* Run the `install_apache.yml` playbook:
+Note: This will run against both the Ubuntu and Fedora servers.
+
+```console
+ansible-playbook --ask-become-pass install_apache.yml
+```
+
+A failure should be expected with the Fedora server, as it does not use the Apt package manager.
+
+* Update the `install_apache.yml` playbook:
+
+```console
+nano install_apache.yml
+```
+
+Add the conditional statement `when: ansible_distribution == "Ubuntu"` to each play.
+
+Example:
+```install_apache.yml
+---
+- hosts: all
+  become: true
+  tasks:
+
+  - name: update repository index
+    ansible.builtin.apt:
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install apache2 package
+    ansible.builtin.apt:
+      name: apache2
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install support for php
+    ansible.builtin.apt:
+      name: libapache2-mod-php
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+```
+
+* Run the playbook:
+
+```console
+ansible-playbook --ask-become-pass install_apache.yml
+```
+
+It is expected that the Ansible will skip the Fedora server entirely when running the playbook.
+
+* Example of how Ansible is able to gather facts about a host:
+
+```console
+ansible all -m gather_facts --limit 192.168.99.201
+```
+
+This will limit the output to that generated from the Fedora server.
+Note: If the output is further filtered by using `grep ansible_distribution`, then `Fedora` will be listed.
+
+* Update the `install_apache.yml` playbook to include plays for the Fedora server:
+
+```console
+nano install_apache.yml
+```
+
+Copy the three plays and paste a new set below the originals.
+Then, update the new set to use `dnf` instead of `apt` Ansible modules and `Fedora` instead of `Ubuntu` in the conditional for the distribution.
+Change the Fedora server to install `httpd` and `php` instead of `apache2` and `libapach2-mod-php`, respectively.
+
+Example:
+```install_apache.yml
+---
+- hosts: all
+  become: true
+  tasks:
+
+  - name: update repository index
+    ansible.builtin.apt:
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install apache2 package
+    ansible.builtin.apt:
+      name: apache2
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install support for php
+    ansible.builtin.apt:
+      name: libapache2-mod-php
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  - name: update repository index
+    ansible.builtin.dnf:
+      update_cache: yes
+    when: ansible_distribution == "Fedora"
+
+  - name: install httpd package
+    ansible.builtin.dnf:
+      name: httpd
+      state: latest
+    when: ansible_distribution == "Fedora"
+
+  - name: install support for php
+    ansible.builtin.dnf:
+      name: php
+      state: latest
+    when: ansible_distribution == "Fedora"
+```
+
+* Run the playbook:
+
+```console
+ansible-playbook --ask-become-pass install_apache.yml
+```
+
+This should reflect three (3) skips for each host, but each should have successful installs of the respective packages.
+
+* Add and commit the changes to Git, and upload them to GitHub:
+
+```console
+git commit -am "Add httpd and PHP to Fedora server" && git push origin
+```
 
 ## Section 3: Organizing our Repository
 
