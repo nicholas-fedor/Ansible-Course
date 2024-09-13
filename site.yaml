@@ -17,92 +17,20 @@
         update_cache: true
       when: ansible_distribution == "Ubuntu"
 
-    - name: Create user
-      tags: always
-      ansible.builtin.user:
-        name: simone
-        groups: root
-
-    - name: Add Sudoers file for Simone
-      tags: always
-      ansible.builtin.copy:
-        src: sudoer_simone
-        dest: /etc/sudoers.d/simone
-        owner: root
-        group: root
-        mode: "0440"
-
-    - name: Add SSH key for Simone
-      tags: always
-      ansible.posix.authorized_key:
-        user: simone
-        key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFsT4j5I7WtfiqNa9hWZ3qOF91CmFf4OdT4bTaV3q7pI nick@udemy-ansible-ubuntu-00"
-
-- name: Install site web server
-  hosts: web_servers
+- name: Apply base configuration
+  hosts: all
   become: true
-  tasks:
-    - name: Install apache on Ubuntu
-      tags: apache, ubuntu
-      ansible.builtin.apt:
-        name:
-          - apache2
-          - libapache2-mod-php
-      when: ansible_distribution == "Ubuntu"
+  roles:
+    - base
 
-    - name: Install Apache on Fedora
-      tags: apache, fedora
-      ansible.builtin.dnf:
-        name:
-          - httpd
-      when: ansible_distribution == "Fedora"
-
-    - name: Ensure Apache is running on Ubuntu
-      tags: apache, ubuntu
-      ansible.builtin.service:
-        name: apache2
-        state: started
-      when: ansible_distribution == "Ubuntu"
-
-    - name: Ensure Apache is running on Fedora
-      tags: apache, fedora
-      ansible.builtin.service:
-        name: httpd
-        state: started
-      when: ansible_distribution == "Fedora"
-
-    - name: Change admin email address
-      tags: apache, fedora
-      ansible.builtin.lineinfile:
-        path: /etc/httpd/conf/httpd.conf
-        regexp: "^ServerAdmin" # Look for line that starts with ServerAdmin
-        line: ServerAdmin somebody@somewhere.net
-      when: ansible_distribution == "Fedora"
-      register: httpd
-
-    - name: Restart httpd on Fedora
-      tags: apache, fedora
-      ansible.builtin.service:
-        name: httpd
-        state: restarted
-      when: httpd.changed
-
-    - name: Copy html file to web server
-      tags: apache, ubuntu
-      ansible.builtin.copy:
-        src: default_site.html
-        dest: /var/www/html/index.html
-        owner: root
-        group: root
-        mode: "0644"
-
-- name: Install site database
-  tags: db, fedora
+- name: Apply database server configuration
   hosts: db_servers
   become: true
-  tasks:
-    - name: Install mariadb
-      ansible.builtin.dnf:
-        name:
-          - mariadb
-      when: ansible_distribution == "Fedora"
+  roles:
+    - db_servers
+
+- name: Apply web server configuration
+  hosts: web_servers
+  become: true
+  roles:
+    - web_servers

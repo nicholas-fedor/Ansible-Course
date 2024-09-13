@@ -1,0 +1,28 @@
+- name: Install Apache on Ubuntu
+  tags: apache, ubuntu
+  ansible.builtin.apt:
+    name:
+      - apache2
+      - libapache2-mod-php
+  when: ansible_distribution == "Ubuntu"
+
+- name: Install Apache on Fedora
+  tags: apache, fedora
+  ansible.builtin.dnf:
+    name:
+      - httpd
+  when: ansible_distribution == "Fedora"
+
+- name: Ensure Apache service is running on Ubuntu
+  tags: apache, ubuntu
+  ansible.builtin.service:
+    name: apache2
+    state: started
+  when: ansible_distribution == "Ubuntu"
+
+- name: Ensure Apache service is running on Fedora
+  tags: apache, fedora
+  ansible.builtin.service:
+    name: httpd
+    state: started
+  when: ansible_distribution == "Fedora"

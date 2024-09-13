@@ -1316,6 +1316,165 @@ git commit -am "Added plays for creating bootstrap user" && git push origin
 
 ### Part 14. Implementing Server Roles
 
+- Rename the current `site.yml` to `site_before_lesson_14.yml`
+
+- Create a new `site.yml` with the following:
+
+```site.yml
+---
+- name: Install updates
+  hosts: all
+  become: true
+  pre_tasks:
+    - name: Install updates for Fedora
+      tags: always
+      ansible.builtin.dnf:
+        update_only: true
+        update_cache: true
+      when: ansible_distribution == "Fedora"
+
+    - name: Install updates for Ubuntu
+      tags: always
+      ansible.builtin.apt:
+        upgrade: dist
+        update_cache: true
+      when: ansible_distribution == "Ubuntu"
+
+- hosts: all
+  become: true
+  roles:
+    - base
+
+- hosts: db_servers
+  become: true
+  roles:
+    - db_servers
+
+- hosts: web_servers
+  become: true
+  roles:
+    - web_servers
+```
+
+- Create a `roles` directory:
+
+```console
+mkdir roles
+```
+
+- Create `base`, `web_servers`, and `db_servers` subdirectories within the `roles` directory:
+
+```console
+mkdir ./roles/base ./roles/web_servers ./roles/db_servers
+```
+
+- Create `files` and `tasks` subdirectories within `base`, `web_servers`, and `db_servers` subdirectories:
+
+```console
+mkdir ./roles/base/files ./roles/base/tasks && \
+mkdir ./roles/web_servers/files ./roles/web_servers/tasks && \
+mkdir ./roles/db_servers/files ./roles/db_servers/tasks
+```
+
+- Create `main.yml` within `./roles/base/tasks/` directory with the following:
+
+```./roles/base/tasks/main.yml
+- name: Create user
+  tags: always
+  ansible.builtin.user:
+    name: simone
+    groups:
+      - root
+
+- name: Add sudoers file for simone
+  tags: always
+  ansible.builtin.copy:
+    src: sudoer_simone
+    dest: /etc/sudoers.d/simone
+    owner: root
+    group: root
+    mode: "0440"
+
+- name: Add SSH key for simone user
+  tags: always
+  ansible.posix.authorized_key:
+    user: simone
+    key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFsT4j5I7WtfiqNa9hWZ3qOF91CmFf4OdT4bTaV3q7pI nick@udemy-ansible-ubuntu-00"
+```
+
+- Move the `sudoer_simone` file to `./roles/base/files/`:
+
+```console
+mv ./files/sudoer_simone ./roles/base/files
+```
+
+- Create a `main.yml` file in `./roles/db_servers/tasks/` with the following:
+
+```./roles/db_servers/tasks/main.yml
+- name: Install MariaDB
+  ansible.builtin.dnf:
+    name:
+      - mariadb
+  when: ansible_distribution == "Fedora"
+```
+
+- Create a `main.yml` file in `./roles/web_servers/tasks/` with the following:
+
+```./roles/web_servers/tasks/main.yml
+- name: Install Apache on Ubuntu
+  tags: apache, ubuntu
+  ansible.builtin.apt:
+    name:
+      - apache2
+      - libapache2-mod-php
+  when: ansible_distribution == "Ubuntu"
+
+- name: Install Apache on Fedora
+  tags: apache, fedora
+  ansible.builtin.dnf:
+    name:
+      - httpd
+  when: ansible_distribution == "Fedora"
+
+- name: Ensure Apache service is running on Ubuntu
+  tags: apache, ubuntu
+  ansible.builtin.service:
+    name: apache2
+    state: started
+  when: ansible_distribution == "Ubuntu"
+
+- name: Ensure Apache service is running on Fedora
+  tags: apache, fedora
+  ansible.builtin.service:
+    name: httpd
+    state: started
+  when: ansible_distribution == "Fedora"
+```
+
+- Update `inventory` file by removing Fedora from `web_servers` group and adding both it and the Ubuntu server to a new `base` group:
+
+```inventory
+[base]
+# Ubuntu Server VM Udemy-Ansible-Ubuntu-01
+192.168.99.245
+# Fedora Server VM Udemy-Ansible-Fedora-02
+192.168.99.201
+
+[web_servers]
+# Ubuntu Server VM Udemy-Ansible-Ubuntu-01
+192.168.99.245
+
+[db_servers]
+# Fedora Server VM Udemy-Ansible-Fedora-02
+192.168.99.201
+```
+
+- Update Git repo:
+
+```console
+git commit -am "Update to roles-based playbook structure" && git push origin
+```
+
 ### Part 15. Taking Advantage of Host Variables
 
 ### Part 16. Creating Templates

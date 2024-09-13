@@ -1,8 +1,12 @@
-[web_servers]
+[base]
 # Ubuntu Server VM Udemy-Ansible-Ubuntu-01
 192.168.99.245
 # Fedora Server VM Udemy-Ansible-Fedora-02
 192.168.99.201
+
+[web_servers]
+# Ubuntu Server VM Udemy-Ansible-Ubuntu-01
+192.168.99.245
 
 [db_servers]
 # Fedora Server VM Udemy-Ansible-Fedora-02
