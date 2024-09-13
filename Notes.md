@@ -959,6 +959,44 @@ git commit -am "Add tags to site.yml" && git push origin
 
 ### Part 11. Copying Files with Ansible
 
+Copying files to a target node.
+
+- Create a `files` directory:
+
+```console
+mkdir files
+```
+
+- Create a `default_site.html` file within the `files` directory:
+
+```console
+nano /files/default_site.html
+```
+
+- Add the following boilerplate HTML:
+
+```default_site.html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Hello World!</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+</head>
+<body>
+    <h1>Hello World!</h1>
+    <p>Ansible is awesome!</p>
+</body>
+</html>
+```
+
+- Add to Git repo:
+
+```console
+git commit -am "Add default_site.html" && git push origin
+```
+
 ### Part 12. Managing Services
 
 ### Part 13. Adding System Users
