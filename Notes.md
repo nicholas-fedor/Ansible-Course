@@ -600,6 +600,160 @@ git commit -am "Add httpd and PHP to Fedora server" && git push origin
 
 ### Part 8. Refactoring and Simplifying Our Playbook
 
+* Open the `install_apache.yml` playbook:
+
+```console
+nano install_apache.yml
+```
+
+* Combine the plays to install Apache and PHP for each distribution.
+
+Example:
+
+```install_apache.yml
+---
+- hosts: all
+  become: true
+  tasks:
+
+  - name: update repository index
+    ansible.builtin.apt:
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install apache2 and libapache2-mod-php packages
+    ansible.builtin.apt:
+      name:
+        - apache2
+        - libapache2-mod-php
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  - name: update repository index
+    ansible.builtin.dnf:
+      update_cache: yes
+    when: ansible_distribution == "Fedora"
+
+  - name: install httpd and php packages
+    ansible.builtin.dnf:
+      name:
+        - httpd
+        - php
+      state: latest
+    when: ansible_distribution == "Fedora"
+```
+
+* Run the updated `install_apache.yml` playbook:
+
+```console
+ansible-playbook --ask-become-pass install_apache.yml
+```
+
+The expectation is that the playbook should run with no errors.
+
+* Examine the status of `httpd` on the Fedora server:
+
+```console
+systemctl status http
+```
+
+It should show as installed; however, will not be running.
+This will be addressed later in the course.
+
+* Refactor the `install_apache.yml` playbook even further:
+
+```console
+nano install_apache.yml
+```
+
+Instead of separate plays for updating the repository indexes, `update_cache: yes` can be used within the installation plays.
+
+Example:
+
+```install_apache.yml
+---
+- hosts: all
+  become: true
+  tasks:
+
+  - name: install apache2 and libapache2-mod-php packages
+    ansible.builtin.apt:
+      name:
+        - apache2
+        - libapache2-mod-php
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: install httpd and php packages
+    ansible.builtin.dnf:
+      name:
+        - httpd
+        - php
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "Fedora"
+```
+
+* Run the updated `install_apache.yml` playbook:
+
+```console
+ansible-playbook --ask-become-pass install_apache.yml
+```
+
+The expectation is that the playbook should run with no errors.
+
+* It is possible to bring the `install_apache.yml` playbook down to a single play:
+
+```console
+nano install_apache.yml
+```
+
+Change the modules from `apt` and `dnf` to `package`.
+Because the package names are different for Ubuntu and Fedora, use host variables.
+
+Example:
+
+```install_apache.yml
+---
+- hosts: all
+  become: true
+  tasks:
+
+  - name: install apache2 and php 
+    ansible.builtin.package:
+      name:
+        - "{{ apache_package }}"
+        - "{{ php_package }}"
+      state: latest
+      update_cache: yes
+```
+
+This also requires updating the `inventory` file.
+
+Example:
+
+```inventory
+# Ubuntu Server VM Udemy-Ansible-Ubuntu-01
+192.168.99.245 apache_package=apache2 php_package=libapache2-mod-php
+# Fedora Server VM Udemy-Ansible-Fedora-02
+192.168.99.201 apache_package=httpd php_package=php
+```
+
+* Run the updated `install_apache.yml` playbook:
+
+```console
+ansible-playbook --ask-become-pass install_apache.yml
+```
+
+The expectation is that the playbook should run with no errors.
+
+* Update the Git repository:
+
+```console
+git commit -am "Refactor install_apache.yml playbook and update inventory" && git push origin
+```
+
 ### Part 9. Creating and Inventory for Ansible
 
 ### Part 10. Adding Tags
