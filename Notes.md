@@ -1636,6 +1636,7 @@ Note: The `notify` feature allows multiple changes to occur to a host; however, 
 ```console
 git commit -am "Add host variables and a handler" && git push origin
 ```
+
 ### Part 16. Creating Templates
 
 ## Section 6: Exploring Additional Ansible Features
