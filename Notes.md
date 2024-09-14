@@ -2050,7 +2050,28 @@ git commit -am "Add gearlingguy.apache role" && git push origin
 
 ### Part 18. Keeping Secrets
 
+Exploring Ansible Vault for managing secrets.
 
+`ansible-vault` is the CLI command.
+
+- Create a `secret.txt` file:
+
+```console
+ansible-vault create secret.txt
+```
+
+Expect a prompt for a new Vault password.
+Using `ansible` for this course.
+A text editor will open (usually the default editor, Vim).
+If Vim, enter i (for insert mode), and add `Hello World`.
+Then, hit escape, `:`, and `wq` to write and quit.
+A new secret.txt file should appear.
+
+- Add the new file to the Git repository:
+
+```console
+git commit -am "Add secret.txt" && git push origin
+```
 
 ### Part 19. Ansible in Reverse
 
