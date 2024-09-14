@@ -2162,3 +2162,11 @@ If working with a private GitHub repo, then the host will need to be authenticat
 `local.yml` is the default filename that Ansible expects to find.
 
 ### Part 20. Course Closing and Next Steps
+
+Recommendations for additional learning resources:
+
+[Learn Linux TV Website](https://www.learnlinux.tv)
+[Learn Linux TV YouTube Channel](https://www.youtube.com/@LearnLinuxTV)
+[Ansible's Documentation Website](https://docs.ansible.com/)
+[Jeff Geerling's Ansible Book](https://www.ansiblefordevops.com/)
+[Jeff Geerling's Ansible Resources](https://ansible.jeffgeerling.com/)
