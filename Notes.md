@@ -1993,8 +1993,67 @@ git commit -am "Add templates for SSH" && git push origin
 
 ### Part 17. Exploring the Galaxy
 
+Nearing the end of the course.
+Addressing topics that didn't fit with the other items.
+Ansible Galaxy is a repository for roles, collections, etc that are made publicly available from a centralize location.
+
+- Navigate the the website via a web browser: [Ansible Galaxy](https://galaxy.ansible.com/ui/)
+- Go to `Roles > Roles` and sort by `Download Count`: [Link](https://galaxy.ansible.com/ui/standalone/roles/?page=1&page_size=10&sort=-download_count>)
+- Search for `Apache`: [Link](hhttps://galaxy.ansible.com/ui/standalone/roles/?page=1&page_size=10&sort=-download_count&keywords=apache)
+- Select the `geerlingguy.apache` role: [Link](https://galaxy.ansible.com/ui/standalone/roles/geerlingguy/apache/)
+- Copy the command `ansible-galaxy role install geerlingguy.apache`
+- Enter the pasted command into the terminal and run it
+- Run `ansible-galaxy list` to show installed roles
+
+- Make sure still within the `~/Documents/Ansible` directory
+- Update the `Apply web server configuration` play with the `geerlingguy.apache` role in `site.yml`:
+
+```site.yml
+- name: Apply web server configuration
+  hosts: apache
+  become: true
+  roles:
+    - geerlingguy.apache
+```
+
+- Update the `inventory` file as well by changing the `web_servers` role to `apache`:
+
+```inventory
+[apache]
+# Ubuntu Server VM Udemy-Ansible-Ubuntu-01
+192.168.99.245
+# Fedora Server VM Udemy-Ansible-Fedora-02
+192.168.99.201
+
+[db_servers]
+# Fedora Server VM Udemy-Ansible-Fedora-02
+192.168.99.201
+```
+
+- Run the `site.yml` playbook:
+
+```console
+ansible-playbook site.yml
+```
+
+- Remove a role installed from Ansible Galaxy:
+
+```console
+ansible-galaxy remove geerlingguy.apache
+```
+
+- Update the Git repository with the changes:
+
+```console
+git commit -am "Add gearlingguy.apache role" && git push origin
+```
+
 ### Part 18. Keeping Secrets
 
+
+
 ### Part 19. Ansible in Reverse
+
+
 
 ### Part 20. Course Closing and Next Steps
