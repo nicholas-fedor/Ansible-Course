@@ -1,3 +1,5 @@
 # Ubuntu Server VM Udemy-Ansible-Ubuntu-01
 apache_package: apache2
 apache_service: apache2
+passwd_auth: no
+ssh_template_file: sshd_conf_ubuntu.j2

@@ -1,3 +1,5 @@
 # Fedora Server VM Udemy-Ansible-Fedora-02
 apache_package: httpd
 apache_service: httpd
+passwd_auth: no
+ssh_template_file: sshd_conf_fedora.j2
