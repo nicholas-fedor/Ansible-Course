@@ -2073,8 +2073,47 @@ A new secret.txt file should appear.
 git commit -am "Add secret.txt" && git push origin
 ```
 
+- To decrypt the file:
+
+```console
+ansible-vault decrypt secret.txt
+```
+
+This will decrypt `secret.txt` back into the `Hello World` text.
+
+- To encrypt the existing `secret.txt` file:
+
+```console
+ansible-vault encrypt secret.txt
+```
+
+Using a password of `ansible`.
+This will result in the file becoming encrypted again.
+
+- To view the file without decrypting it:
+
+```console
+ansible-vault view secret.txt
+```
+
+- To edit the encrypted file:
+
+```console
+ansible-vault edit secret.txt
+```
+
+- To save the Vault password to a file `.vault_key`:
+
+```console
+echo test123 > ~/.vault_key && chmod 600 ~/.vault_key
+```
+
+- To encrypt `secret.txt` using the newly created `.vault_key` file:
+
+```console
+ansible-vault encrypt secret.txt --vault-password-file ~/.vault_key
+```
+
 ### Part 19. Ansible in Reverse
-
-
 
 ### Part 20. Course Closing and Next Steps
