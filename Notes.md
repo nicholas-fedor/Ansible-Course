@@ -415,7 +415,7 @@ nano remove_apache.yml
 - Run the `remove_apache.yml` playbook:
 
 ```console
-ansible-playbook --ask-become-pass remove_apache.yaml
+ansible-playbook --ask-become-pass remove_apache.yml
 ```
 
 The output should show each play is run and an indication of four (4) ok's and three (3) changes.
@@ -1254,7 +1254,7 @@ echo "remote_user = simone" >> ansible.cfg
 - Run the `site.yml` playbook to test the addition of the user configuration:
 
 ```console
-ansible-playbook site.yaml
+ansible-playbook site.yml
 ```
 
 Note: The `--ask-become-pass` flag should not be needed anymore with the Sudoers configuration added for the `simone` user.
@@ -1303,7 +1303,7 @@ echo "simone ALL=(ALL) NOPASSWD: ALL" > ~/Documents/Ansible/files/sudoer_simone
 - Apply the configuration using the `site.yml` playbook:
 
 ```console
-ansible-playbook site.yaml
+ansible-playbook site.yml
 ```
 
 - Update the Git repository:
@@ -1477,6 +1477,165 @@ git commit -am "Update to roles-based playbook structure" && git push origin
 
 ### Part 15. Taking Advantage of Host Variables
 
+Allows different sets of variables to be applied to hosts.
+
+- Update the `./roles/web_servers/tasks/main.yml` file:
+
+```./roles/web_servers/tasks/main.yml
+- name: Install Apache on web servers
+  tags: apache
+  ansible.builtin.package:
+    name:
+      - "{{ apache_package }}"
+
+- name: Ensure Apache service is running
+  tags: apache
+  ansible.builtin.service:
+    name: "{{ apache_service }}"
+    state: started
+
+- name: Change admin email address
+  tags: apache, fedora
+  ansible.builtin.lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: "^ServerAdmin"
+    line: ServerAdmin somebody@somewhere.net
+  when: ansible_distribution == "Fedora"
+  register: apache
+
+- name: Restart Apache
+  ansible.builtin.service:
+    name: "{{ apache_service }}"
+    state: restarted
+  when: apache.changed
+```
+
+Instead of referring to distribution-specific package managers, use the `ansible.builtin.package` module.
+Also, use the variables, such as `"{{ apache_package }}"` instead of `apache2`.
+
+- Create a `host_vars` directory:
+
+```console
+mkdir /home/nick/Documents/Ansible/host_vars
+```
+
+- Create configuration files for each host in the `host_vars` directory:
+
+```console
+touch ./host_vars/192.168.99.201.yml ./host_vars/192.168.99.245.yml
+```
+
+- Update each file with the respective variable definitions:
+
+```192.168.99.201.yml
+# Fedora Server VM Udemy-Ansible-Fedora-02
+apache_package: httpd
+apache_service: httpd
+```
+
+```192.168.99.245.yml
+# Ubuntu Server VM Udemy-Ansible-Ubuntu-01
+apache_package: apache2
+apache_service: apache2
+```
+
+Note: It's preferable to use hostnames instead of IP addresses for defining hosts.
+
+- Remove the `base` group from the `inventory` file:
+
+```inventory
+[web_servers]
+# Ubuntu Server VM Udemy-Ansible-Ubuntu-01
+192.168.99.245
+
+[db_servers]
+# Fedora Server VM Udemy-Ansible-Fedora-02
+192.168.99.201
+```
+
+- Run the `site.yml` file to test the playbook:
+
+```console
+ansible-playbook site.yml
+```
+
+There should be no errors.
+
+- Setup `notify` within `./roles/web_servers/tasks/main.yml` by modifying the `Change admin email address` play:
+
+```./roles/web_servers/tasks/main.yml
+- name: Change admin email address
+  tags: apache, fedora
+  ansible.builtin.lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: "^ServerAdmin"
+    line: ServerAdmin somebody@somewhere.net
+  when: ansible_distribution == "Fedora"
+  notify: restart_apache
+```
+
+`register` results in the `Restart Apache` play right away; however, `notify` waits until later to run the play.
+
+- Remove the `Restart Apache` play from `./roles/web_servers/tasks/main.yml` and instead create a new subdirectory `./roles/web_servers/handlers`:
+
+```console
+mkdir /home/Nick/Documents/Ansible/roles/web_servers/handlers
+```
+
+- Create a new handler `Restart_Apache` in `./roles/web_servers/handlers/main.yml`:
+
+```./roles/web_servers/handlers/main.yml
+- name: Restart_apache
+  ansible.builtin.service:
+    name: "{{ apache_service }}"
+    state: restarted
+```
+
+- Run `site.yml` to test the changes:
+
+```console
+ansible-playbook site.yml
+```
+
+It's unlikely there will be any changes made.
+
+- To induce a change, update the admin email to `somebody@somewhere.com` in the `./roles/web_servers/tasks/main.yml` file:
+
+```main.yml
+...
+line: ServerAdmin somebody@somewhere.com
+...
+```
+
+- Re-add the Fedora server back to the `web_servers` group in the `inventory` file:
+
+```inventory
+[web_servers]
+# Ubuntu Server VM Udemy-Ansible-Ubuntu-01
+192.168.99.245
+# Fedora Server VM Udemy-Ansible-Fedora-02
+192.168.99.201
+
+[db_servers]
+# Fedora Server VM Udemy-Ansible-Fedora-02
+192.168.99.201
+```
+
+- Run the `site.yml` playbook again to push the change:
+
+```console
+ansible-playbook site.yml
+```
+
+The output should reflect changes were made to the Fedora server.
+
+Note: The `notify` feature allows multiple changes to occur to a host; however, these changes will only trigger the single follow-on task, as opposed to repeatedly triggering the same follow-on task for each change.
+
+- Update the course Git repository:
+
+```console
+git commit -am "Add host variables and a handler" && git push origin
+```
 ### Part 16. Creating Templates
 
 ## Section 6: Exploring Additional Ansible Features

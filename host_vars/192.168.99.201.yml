@@ -1,0 +1,3 @@
+# Fedora Server VM Udemy-Ansible-Fedora-02
+apache_package: httpd
+apache_service: httpd
