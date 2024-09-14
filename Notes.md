@@ -2116,4 +2116,49 @@ ansible-vault encrypt secret.txt --vault-password-file ~/.vault_key
 
 ### Part 19. Ansible in Reverse
 
+Exploring Ansible Pull.
+
+This utilizes version control directly for making changes to hosts.
+
+- Create a new GitHub repository via the GitHub website.
+- Clone it to a new directory in ~/Documents
+- Create a new `local.yml` file with the following content:
+
+```local.yml
+---
+- name: Install Apache webserver 
+  hosts: localhost
+  connection: local
+  become: true
+  tasks:
+    - name: Update all packages
+      ansible.builtin.apt:
+        upgrade: dist
+        update_cache: true
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install Apache2
+      ansible.builtin.apt:
+        name:
+          - apache2
+      when: ansible_distribution == "Ubuntu"
+```
+
+- Add it to the GitHub repository:
+
+```console
+git add . && git commit -m "Initial commit" && git push origin main
+```
+
+- Run from the GitHub https version of the pull command:
+
+```console
+ansible-pull --ask-become-pass -U https://github.com/nicholas-fedor/Ansible-Course-Pull.git
+```
+
+Note:
+If working with a private GitHub repo, then the host will need to be authenticated to access the repository.
+
+`local.yml` is the default filename that Ansible expects to find.
+
 ### Part 20. Course Closing and Next Steps
