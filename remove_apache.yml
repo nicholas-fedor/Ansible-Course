@@ -3,7 +3,6 @@
   hosts: all
   become: true
   tasks:
-
     - name: Update repository index
       ansible.builtin.apt:
         update_cache: true
